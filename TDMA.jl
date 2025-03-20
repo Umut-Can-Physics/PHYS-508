@@ -18,11 +18,7 @@ Calculate the `A,B,C,D` variables to compute discrete solution of differential p
 - `N`: The number of grid points
 - `ϵ`: Parameter
 """
-function Get_ABCD_Values(c, d, N, ϵ, method)
-
-    # The definition of grid line
-    h = (d-c)/(N-1)
-    x_range = c:h:d 
+function Get_ABCD_Values(c, h, N, ϵ, method)
 
     # Initialization of arrays 
     x=zeros(N);a=zeros(N);b=zeros(N);ff=zeros(N)
@@ -42,10 +38,12 @@ function Get_ABCD_Values(c, d, N, ϵ, method)
     elseif method==2
         γ = (0.5*abs.(R)).+1
     elseif method==3
-        inf_point = findall(n->n==0,R)
-        γ = 0.5*R.*coth.(0.5*R)
-        if inf_point != length(0)
-            γ[only(inf_point)] = 1
+        for k in 2:N-1
+            if R[k]>1e-6
+                γ[k] = 0.5*R[k].*coth.(0.5*R[k])    
+            else
+                γ[k] = 1
+            end
         end
     end
 
@@ -116,11 +114,30 @@ end
 # Thissection includes running of the functions and plot the results
 #-#
 
-# use odd numbers for N
-N=15;ϵ=0.1
+# use odd numbers for N in definition of grid
+N=400;ϵ=0.0001
 c=-1;d=1
+h = (d-c)/(N-1)
+x_range = c:h:d 
+
 method = 1
-A, B, C, F, x, x_range = Get_ABCD_Values(c, d, N, ϵ, method)
-U = TDMA(A,B,C,F)
-plot(x_range, U)
-plot!(x_range,exact(x, ϵ),linestyle=:dash)
+A, B, C, F, x, x_range = Get_ABCD_Values(c, h, N, ϵ, method)
+U1 = TDMA(A,B,C,F)
+
+method = 2
+A, B, C, F, x, x_range = Get_ABCD_Values(c, h, N, ϵ, method)
+U2 = TDMA(A,B,C,F)
+
+method = 3
+A, B, C, F, x, x_range = Get_ABCD_Values(c, h, N, ϵ, method)
+U3 = TDMA(A,B,C,F)
+
+Solutions = plot(x_range, [U1, U2, U3], xlabel=L"x", title=latexstring("\$ N=$(N), ϵ=$(ϵ) \$"),dpi=500)
+
+# Fine grid for exact solution
+N_fine=400
+h_fine = (d-c)/(N_fine-1)
+x_range = c:h_fine:d 
+x = [c + (k-1)*h_fine for k in 1:N_fine]
+plot!(x_range, exact(x, ϵ),linestyle=:dash,label="Exact",dpi=500)
+savefig(Solutions,"Solutions for N=$(N).png")
