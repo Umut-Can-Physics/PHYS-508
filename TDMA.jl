@@ -10,21 +10,23 @@ includet("Main.jl")
 # This section includes running of the functions and plot the results
 #-#
 
-N=18;ϵ=0.01
+N=108;ϵ=0.01
 c=-1;d=1
 h = (d-c)/(N-1)
 x_range = c:h:d 
 
+param = "linear"
+u = 0
 method = 1
-A, B, C, F, x, x_range, u_exact_list_1 = Get_ABCD_Values(c, h, N, ϵ, method)
+A, B, C, F, x, x_range, u_exact_list_1 = CoeffMatrix(c, h, N, ϵ, u, param, method)
 U1 = TDMA(A,B,C,F)
 
 method = 2
-A, B, C, F, x, x_range, u_exact_list_2 = Get_ABCD_Values(c, h, N, ϵ, method)
+A, B, C, F, x, x_range, u_exact_list_2 = CoeffMatrix(c, h, N, ϵ, u, param, method)
 U2 = TDMA(A,B,C,F)
 
 method = 3
-A, B, C, F, x, x_range, u_exact_list_3 = Get_ABCD_Values(c, h, N, ϵ, method)
+A, B, C, F, x, x_range, u_exact_list_3 = CoeffMatrix(c, h, N, ϵ, u, param, method)
 U3 = TDMA(A,B,C,F)
 
 plt_title=latexstring("\$ N=$(N), ϵ=$(ϵ) \$")
@@ -37,7 +39,6 @@ x_range_fine = c:h_fine:d
 x_value = [c + (k-1)*h_fine for k in 1:N_fine]
 plot(x_range_fine, exact(x_value, ϵ), linestyle=:dash, label="Exact", dpi=500)
 savefig(Solutions,"Solutions for N=$(N).png")
-
 
 # PLOT ROUND MEAN SQUARED ERRORS (GRID REFINEMENT)
 ϵ=0.01
@@ -102,7 +103,8 @@ for (idx,N) in enumerate(N_list)
     RMS[3,idx] = e_max_3
 end
 plt_titlee = latexstring("\$ ϵ=$(ϵ)\$")
-Max_errors_plot = plot(N_list,RMS[1,:],xlabel=L"N",ylabel=L"||e||_\infty", title=plt_titlee, label="Centeral Difference", dpi=500)
+Max_errors_plot = plot(N_list,RMS[1,:],xlabel=L"N",ylabel=L"||e||_\infty", title=plt_titlee, label="Centeral Difference", dpi=500,
+markershape=:circle)
 plot!(N_list,RMS[2,:],label="Directed Difference",dpi=500)
 plot!(N_list,RMS[3,:],label="Exponential",dpi=500)
 savefig(Max_errors_plot,"Max Errors Plot.png")
@@ -178,3 +180,4 @@ xticks=ϵ_list,xaxis=:log)
 plot!(ϵ_list,Max_errors_epsilon[2,:],label="Directed Difference",dpi=500)
 plot!(ϵ_list,Max_errors_epsilon[3,:],label="Exponential",dpi=500)
 savefig(Max_errors_epsilon_plot,"Max Errors Epsilon Plot.png")
+
